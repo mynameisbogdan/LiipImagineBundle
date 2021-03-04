@@ -90,7 +90,7 @@ class LiipImagineExtension extends Extension
         }
 
         if ($this->isConfigEnabled($container, $config['messenger'])) {
-            $this->registerMessengerConfiguration($config['messenger'], $container, $loader);
+            $this->registerMessengerConfiguration($loader);
         }
 
         if ($config['templating']) {
@@ -166,7 +166,7 @@ class LiipImagineExtension extends Extension
         }
     }
 
-    private function registerMessengerConfiguration(array $config, ContainerBuilder $container, XmlFileLoader $loader): void
+    private function registerMessengerConfiguration(XmlFileLoader $loader): void
     {
         if (!interface_exists(MessageBusInterface::class)) {
             throw new LogicException('Messenger support cannot be enabled as the Messenger component is not installed. Try running "composer require symfony/messenger".');
