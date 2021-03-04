@@ -20,10 +20,13 @@ use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\Alias;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
+use Symfony\Component\DependencyInjection\Exception\LogicException;
 use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Mime\MimeTypeGuesserInterface;
 use Symfony\Component\Mime\MimeTypes;
+use function interface_exists;
 
 class LiipImagineExtension extends Extension
 {
@@ -84,6 +87,10 @@ class LiipImagineExtension extends Extension
 
         if ($config['enqueue']) {
             $loader->load('enqueue.xml');
+        }
+
+        if ($this->isConfigEnabled($container, $config['messenger'])) {
+            $this->registerMessengerConfiguration($config['messenger'], $container, $loader);
         }
 
         if ($config['templating']) {
@@ -157,6 +164,15 @@ class LiipImagineExtension extends Extension
         foreach ($configurations as $name => $conf) {
             $factories[key($conf)]->create($container, $name, $conf[key($conf)]);
         }
+    }
+
+    private function registerMessengerConfiguration(array $config, ContainerBuilder $container, XmlFileLoader $loader): void
+    {
+        if (!interface_exists(MessageBusInterface::class)) {
+            throw new LogicException('Messenger support cannot be enabled as the Messenger component is not installed. Try running "composer require symfony/messenger".');
+        }
+
+        $loader->load('messenger.xml');
     }
 
     private function deprecationTemplatingFilterHelper(ContainerBuilder $container): void
